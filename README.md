@@ -8,4 +8,5 @@ conda create -n bunk_env python=3.11 cudatoolkit=11.3
 conda activate bunk_env
 
 cd desformers
+
 pip install -r requirements.txt
