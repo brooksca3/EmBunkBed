@@ -1,5 +1,5 @@
 
-# EmBunkBed
+# Em(Bunk)Bed
 
 ## Introduction
 embedding bunk beds for PLMs
