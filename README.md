@@ -8,6 +8,14 @@ embedding bunk beds for PLMs
 
 To get started with EmBunkBed, you need to set up a conda environment and install the necessary dependencies. Follow the steps below to prepare your environment.
 
+After cloning the repository, run
+
+```bash
+git submodule update --init --recursive
+```
+
+to checkout the desformers submodule.
+
 ### Prerequisites
 
 - Anaconda3 (Version 2021.5)
