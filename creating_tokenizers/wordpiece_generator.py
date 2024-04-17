@@ -66,6 +66,11 @@ def get_tokenizer(tok_ls, file_append=''):
     tokenizer = PreTrainedTokenizerFast(tokenizer_file=file_append + "custom_tokenizer.json")
     tokenizer.pad_token = '[PAD]'
     tokenizer.unk_token = '[UNK]'
+    tokenizer.mask_token = '[MASK]'
+    tokenizer.cls_token = '[CLS]'
+    tokenizer.sep_token = '[SEP]'
+
+
     return tokenizer
 
 def main():
@@ -77,5 +82,7 @@ def main():
     for line in lines[:5]:
         print(tokenizer.tokenize(line[:1024].lower()))
         print('-------')
+    print(tokenizer.tokenize('6sid', padding='max_length', max_length=20))
+main()
 
 
