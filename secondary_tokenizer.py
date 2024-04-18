@@ -79,8 +79,12 @@ class ProteinTokenizer(SecondaryTokenizer):
 
   def tokenize(self, string): # not old man
     #  final_toks = ['[CLS]', '6']
+     print(string)
      final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]]
      input = string[:]
+     if input[0] != '6':
+        print('Error: first char must be 6')
+        return None
      input = input.replace(' ', '')
      input = input.replace('[mask]', '[MASK]')
      input = input.replace("[MASK]", " 6")
