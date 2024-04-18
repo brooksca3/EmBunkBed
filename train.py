@@ -63,7 +63,7 @@ model = BertForMaskedLM(config).to(device)
 model.to(device)
 
 with open('creating_tokenizers/100_examples_prefixed.txt', 'r') as f:
-  text = f.read().split('\n')
+  text = f.read().lower().split('\n')
   # text = [t.replace("=", '') for t in text]
   text.pop(-1)
   f.close()
@@ -74,7 +74,7 @@ train_inputs = char_tokenizer(text, return_tensors='pt', max_length=MAXLENGTH, t
 train_inputs['labels'] = train_inputs.input_ids.detach().clone()
 
 with open('creating_tokenizers/100_examples_prefixed.txt', 'r') as f:
-  text_val = f.read().split('\n')
+  text_val = f.read().lower().split('\n')
   # text_val = [t.replace("=", '') for t in text_val]
   text_val.pop(-1)
   f.close()
