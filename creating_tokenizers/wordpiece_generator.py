@@ -1,9 +1,27 @@
+import sys
+import os
 from tokenizers import BertWordPieceTokenizer
 from tokenizers import Tokenizer, models, pre_tokenizers, decoders
 import json
-import sys
-sys.path.append('../desformers/src')
-from transformers2 import PreTrainedTokenizerFast
+from contextlib import contextmanager
+
+@contextmanager
+def extend_sys_path(path):
+    original_sys_path = sys.path[:]
+    sys.path.append(path)
+    try:
+        yield
+    finally:
+        sys.path = original_sys_path
+
+# Usage example with your specific scenario
+import getpass
+user = getpass.getuser()
+absolute_project_root = f"/home/{user}/EmBunkBed"
+desformers_path = os.path.join(absolute_project_root, 'desformers', 'src')
+
+with extend_sys_path(absolute_project_root), extend_sys_path(desformers_path):
+    from transformers2 import PreTrainedTokenizerFast
 
 
 def generate(wanted_back, corpus_file_name, dummy_prefix='6'):
@@ -83,6 +101,5 @@ def main():
         print(tokenizer.tokenize(line[:1024].lower()))
         print('-------')
     print(tokenizer.tokenize('6sid', padding='max_length', max_length=20))
-main()
 
 
