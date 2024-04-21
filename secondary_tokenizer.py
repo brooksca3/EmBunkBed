@@ -81,7 +81,7 @@ class ProteinTokenizer(SecondaryTokenizer):
   def tokenize(self, string): # not old man
     #  final_toks = ['[CLS]', '6']
      print(string)
-     final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]] # 1. start w CLS, end with SEP
+     final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]]
      input = string[:]
      if input[0] != '6':
         print('Error: first char must be 6')
@@ -133,8 +133,9 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
 
   def tokenize(self, string):
      print(string)
-     final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]]
-     input = string[:]
+     #final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]]
+     final_toks = []
+     input = string.strip()
      if input[0] != '6':
         print('Error: first char must be 6')
         return None
@@ -149,13 +150,17 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      input_list = [input[i:i+self.k] for i in range(0, len(input), self.k)]
 
      for ind,chunk in enumerate(input_list):
-        cur_toks = self.encode(chunk)
+        temp_chunk = chunk
+        if '6' not in chunk:
+          temp_chunk = "##" + chunk
+        cur_toks = self.encode(temp_chunk)
+        print('\n')
+        print(temp_chunk)
         print(cur_toks)
-        if ind != 0 or cur_toks[0] == self.tokenizer.mask_token_id:
-          final_toks += [self.tokenizer.mask_token_id]
+        
         for tok in cur_toks:
            temp_tok_str = self.tokenizer.convert_ids_to_tokens(tok)
-           print('temp_tok_str')
+           print('temp tok str')
            print(temp_tok_str)
            if tok in self.special_toks:
               cur_len = 1
@@ -164,6 +169,5 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
            else:
               cur_len = len(temp_tok_str)
            final_toks += [tok] * cur_len
-     final_toks.append(self.tokenizer.sep_token_id)
-     print(final_toks)
+     #final_toks.append(self.tokenizer.sep_token_id)
      return torch.tensor(final_toks)
