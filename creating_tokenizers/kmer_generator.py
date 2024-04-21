@@ -23,38 +23,57 @@ desformers_path = os.path.join(absolute_project_root, 'desformers', 'src')
 with extend_sys_path(absolute_project_root), extend_sys_path(desformers_path):
     from transformers2 import PreTrainedTokenizerFast
 
-
-def generate(wanted_back, corpus_file_name, dummy_prefix='6'):
+def generate_kmers(k, corpus_file_name, dummy_prefix='6'):
     with open(corpus_file_name, 'r') as f:
         lines = f.readlines()
-    prefixed_lines = ['6' + line for line in lines]
-    num_unique_chars = len(set(''.join(prefixed_lines)))
+
+    # get length of file
+    prefixed_lines = []
+    for line in lines:
+        line_rem = line.strip()
+        filler_prefix = dummy_prefix
+        num_chars = len(line_rem) + 1 # bc prepending a 6 by default
+        num_filler = num_chars % k
+        for i in range(num_filler):
+            filler_prefix += dummy_prefix
+        prefixed_line = filler_prefix + line
+        prefixed_lines.append(prefixed_line)
+    
+    # prepend dummy prefix
+    # filler_prefix = dummy_prefix
+    # for i in num_filler:
+    #     filler_prefix += dummy_prefix
+    # prefixed_lines = [filler_prefix + line for line in lines]
+    # num_unique_chars = len(set(''.join(prefixed_lines)))
     prefixed_file_name = corpus_file_name[:-4] + '_prefixed.txt'
     with open(prefixed_file_name, 'w') as f:
         for line in prefixed_lines:
             f.write(line)
-    # Initialize a tokenizer
-    wp_tokenizer = BertWordPieceTokenizer()
 
-    # Train the tokenizer
-    wp_tokenizer.train(
-        files=prefixed_file_name,
-        vocab_size=wanted_back + num_unique_chars - 2,
-        min_frequency=3,
-        special_tokens=[
+    # gets unique kmers
+    unique_kmers = set()
+    for line in prefixed_lines:
+        line_rem = line.strip()
+        for i in range(len(line_rem) - k + 1):
+            kmer = line_rem[i:i+k]
+            if '6' in kmer:
+                unique_kmers.add(kmer.lower())
+            else:
+                unique_kmers.add('##'+kmer.lower())
+            
+    #print('unique kmers')
+    #print(unique_kmers)
+    wp_ls = [
             "[PAD]",
             "[UNK]",
             "[MASK]",
             "[SEP]",
             "[CLS]"
         ]
-    )
-    wp_ls = []
+
     # Load vocab and write tokens to a file
-    for token, token_id in wp_tokenizer.get_vocab().items():
-        if dummy_prefix not in token and len(token) > 1:
-            wp_ls.append(token)
-    wp_ls.append(dummy_prefix)
+    wp_ls.extend(list(unique_kmers))
+    print(wp_ls)
     return wp_ls
 
 # toks = generate(3000, '100_examples.txt')
