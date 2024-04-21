@@ -92,14 +92,17 @@ def get_tokenizer(tok_ls, file_append=''):
     return tokenizer
 
 def main():
-
-    toks = generate(5000, '100_examples.txt')
+    toks = generate(10000, '100000_examples.txt')
     tokenizer = get_tokenizer(toks)
-    with open('100__prefixed.txt', 'r') as f:
-        lines = [line.strip() for line in f.readlines()]
-    for line in lines[:5]:
-        print(tokenizer.tokenize(line[:1024].lower()))
-        print('-------')
-    print(tokenizer.tokenize('6sid', padding='max_length', max_length=20))
+    tokenizer.save_pretrained('./char_only_tokenizer')
+    # with open('100__prefixed.txt', 'r') as f:
+    #     lines = [line.strip() for line in f.readlines()]
+    # for line in lines[:5]:
+    #     print(tokenizer.tokenize(line[:1024].lower()))
+    #     print('-------')
+    # print(tokenizer.tokenize('6sid', padding='max_length', max_length=20))
 
+
+
+# main()
 

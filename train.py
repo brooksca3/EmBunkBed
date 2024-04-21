@@ -6,7 +6,7 @@ from secondary_tokenizer import ProteinTokenizer
 sys.path.append('./desformers/src')
 
 from torch.utils.checkpoint import checkpoint
-from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast
 from transformers2.models.bert import BertForMaskedLM
 from transformers2.data.data_collator import DataCollatorForSequenceMask
 
@@ -31,13 +31,13 @@ filestem = '/scratch/gpfs/cabrooks/bunk_models/'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
-protein_tokens = generate(2000, 'creating_tokenizers/100_examples_prefixed.txt')
-protein_wp_tokenizer = get_tokenizer(protein_tokens)
-pt = ProteinTokenizer(tokenizer=protein_wp_tokenizer)
-print(pt.tokenize('6ILDLADQL[MASK]DAADTARPAASTQSATQNTPAEPVPP'.lower()))
+# protein_tokens = generate(2000, 'creating_tokenizers/100_examples_prefixed.txt')
+# protein_wp_tokenizer = get_tokenizer(protein_tokens)
+# pt = ProteinTokenizer(tokenizer=protein_wp_tokenizer)
+# print(pt.tokenize('6ILDLADQL[MASK]DAADTARPAASTQSATQNTPAEPVPP'.lower()))
 
-preload_path = 'cabrooks/character-level-logion'
-char_tokenizer = BertTokenizer.from_pretrained(preload_path)
+preload_path = 'cabrooks/character-only-proteins'
+char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
 config.vocab_size = char_tokenizer.vocab_size
 config.char_tokenizer = char_tokenizer
@@ -45,7 +45,7 @@ config.char_tokenizer = char_tokenizer
 config.char_hidden_size = 60
 config.hidden_size = 768
 config.max_position_embeddings = 1024
-config.secondary_tokenizers = [pt]
+config.secondary_tokenizers = []
 model = BertForMaskedLM(config).to(device)
 
 # Assuming you want to use the pre-trained weights from this model, use given preload_path
@@ -65,7 +65,9 @@ model.to(device)
 with open('creating_tokenizers/100_examples_prefixed.txt', 'r') as f:
   text = f.read().lower().split('\n')
   # text = [t.replace("=", '') for t in text]
-  text.pop(-1)
+  text = [t[:MAXLENGTH] for t in text]
+  if text[-1].strip() == '':
+      text.pop(-1)
   f.close()
 
 num_train_examples = len(text)
@@ -75,12 +77,15 @@ train_inputs['labels'] = train_inputs.input_ids.detach().clone()
 
 with open('creating_tokenizers/100_examples_prefixed.txt', 'r') as f:
   text_val = f.read().lower().split('\n')
+  text_val = [t[:MAXLENGTH] for t in text]
   # text_val = [t.replace("=", '') for t in text_val]
-  text_val.pop(-1)
+  if text_val[-1].strip() == '':
+      text_val.pop(-1)
   f.close()
 
-val_inputs = char_tokenizer(text_val, return_tensors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length')
+val_inputs = char_tokenizer(text_val, return_tenfsors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length')
 val_inputs['labels'] = val_inputs.input_ids.detach().clone()
+
 
 class BaseDataset(torch.utils.data.Dataset):
     def __init__(self, encodings):
@@ -92,6 +97,7 @@ class BaseDataset(torch.utils.data.Dataset):
 
 train_dataset = BaseDataset(train_inputs)
 val_dataset = BaseDataset(val_inputs)
+
 
 data_collator = DataCollatorForLanguageModeling(tokenizer=char_tokenizer, mlm_probability=mask_proportion)
 
