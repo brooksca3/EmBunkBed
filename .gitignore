@@ -2,3 +2,4 @@ __pycache__/
 *custom_tokenizer.json
 *vocab.json
 *prefixed.txt
+*_examples.txt
