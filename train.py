@@ -2,7 +2,8 @@
 import sys
 import torch
 from creating_tokenizers.wordpiece_generator import generate, get_tokenizer
-from secondary_tokenizer import ProteinTokenizer
+from creating_tokenizers.kmer_generator import generate_kmers
+from secondary_tokenizer import ProteinTokenizer, ProteinKmerTokenizer
 sys.path.append('./desformers/src')
 
 from torch.utils.checkpoint import checkpoint
@@ -31,7 +32,18 @@ filestem = '/scratch/gpfs/cabrooks/bunk_models/'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
-# protein_tokens = generate(2000, 'creating_tokenizers/100_examples_prefixed.txt')
+# Fixed k-mer
+k = 2 ### ADJUST PARAMETER AS DESIRED ###
+protein_tokens = generate_kmers(k, 'creating_tokenizers/100_examples.txt')
+protein_wp_tokenizer = get_tokenizer(protein_tokens)
+pt = ProteinKmerTokenizer(k, tokenizer=protein_wp_tokenizer)
+#print(pt.tokenize('6ILDLADQL[MASK]DAADTARPAASTQSATQNTPAEPVPP'.lower()))
+print(pt.tokenize('6VTT'.lower()))
+
+sys.exit()
+
+# WordPiece
+# protein_tokens = generate(2000, 'creating_tokenizers/100_examples.txt')
 # protein_wp_tokenizer = get_tokenizer(protein_tokens)
 # pt = ProteinTokenizer(tokenizer=protein_wp_tokenizer)
 # print(pt.tokenize('6ILDLADQL[MASK]DAADTARPAASTQSATQNTPAEPVPP'.lower()))
