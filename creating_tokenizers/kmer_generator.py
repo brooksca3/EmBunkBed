@@ -73,7 +73,7 @@ def generate_kmers(k, corpus_file_name, dummy_prefix='6'):
 
     # Load vocab and write tokens to a file
     wp_ls.extend(list(unique_kmers))
-    print(wp_ls)
+    # print(wp_ls)
     return wp_ls
 
 # toks = generate(3000, '100_examples.txt')

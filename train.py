@@ -37,7 +37,7 @@ k = 2 ### ADJUST PARAMETER AS DESIRED ###
 protein_tokens = generate_kmers(k, 'creating_tokenizers/100_examples.txt')
 protein_wp_tokenizer = get_tokenizer(protein_tokens)
 pt = ProteinKmerTokenizer(k, tokenizer=protein_wp_tokenizer)
-#print(pt.tokenize('6ILDLADQL[MASK]DAADTARPAASTQSATQNTPAEPVPP'.lower()))
+print(pt.tokenize('6VLDLADQLM'.lower()))
 print(pt.tokenize('6VTT'.lower()))
 
 sys.exit()
