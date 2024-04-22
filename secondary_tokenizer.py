@@ -154,10 +154,11 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      for ind,chunk in enumerate(input_list):
          if ind > 0:
             temp_chunk = filler + chunk
-            if '7' in temp_chunk:
-               cur_toks = self.encode(temp_chunk)[0]
+            cur_toks = self.encode(temp_chunk)
+            if len(cur_toks) == 1:
+              cur_toks = cur_toks[0]
             else:
-               cur_toks = self.encode(temp_chunk)[1]
+              cur_toks = cur_toks[1]
             final_toks += [cur_toks] * self.k
          else:
             final_toks += self.encode(chunk) * self.k

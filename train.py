@@ -33,12 +33,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
 # Fixed k-mer
-k = 2 ### ADJUST PARAMETER AS DESIRED ###
+k = 3 ### ADJUST PARAMETER AS DESIRED ###
 protein_tokens = generate_kmers(k, 'creating_tokenizers/100_examples.txt')
+print(protein_tokens)
 protein_wp_tokenizer = get_tokenizer(protein_tokens)
 pt = ProteinKmerTokenizer(k, tokenizer=protein_wp_tokenizer)
 # print(pt.tokenize('6VLDLADQLM'.lower()))
-print(pt.tokenize('6VTT[MASK]T'.lower()))
+print(pt.tokenize('6MNxxxA[MASK]T'.lower()))
 
 sys.exit()
 
