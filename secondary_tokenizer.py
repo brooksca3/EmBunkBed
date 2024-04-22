@@ -88,6 +88,7 @@ class ProteinTokenizer(SecondaryTokenizer):
         return None
      input = input.replace(' ', '')
      input = input.replace('[mask]', '[MASK]')
+     input = input.replace('[unk]', '[UNK]')
      input = input.replace("[MASK]", " 6")
      input_list = input.split()
      for ind,chunk in enumerate(input_list):
@@ -145,7 +146,7 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      input = input.replace('[mask]', '[MASK]')
      input = input.replace('[unk]', '[UNK]')
      input = input.replace("[MASK]", '7')
-     input = input.replace("[UNK]", '8')
+     input = input.replace("[UNK]", '7')
 
      # split into k-sized windows
      input_list = [input[i:i+self.k] for i in range(0, len(input), self.k)]
@@ -153,7 +154,10 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      for ind,chunk in enumerate(input_list):
          if ind > 0:
             temp_chunk = filler + chunk
-            cur_toks = self.encode(temp_chunk)[1]
+            if '7' in temp_chunk:
+               cur_toks = self.encode(temp_chunk)[0]
+            else:
+               cur_toks = self.encode(temp_chunk)[1]
             final_toks += [cur_toks] * self.k
          else:
             final_toks += self.encode(chunk) * self.k
