@@ -9,7 +9,6 @@ sys.path.append('./desformers/src')
 from torch.utils.checkpoint import checkpoint
 from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast
 from transformers2.models.bert import BertForMaskedLM
-from transformers2.data.data_collator import DataCollatorForSequenceMask
 
 epochs = 500
 MAXLENGTH = 1024

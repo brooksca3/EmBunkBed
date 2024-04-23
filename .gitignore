@@ -3,3 +3,4 @@ __pycache__/
 *vocab.json
 *prefixed.txt
 *_examples.txt
+slurm-*
