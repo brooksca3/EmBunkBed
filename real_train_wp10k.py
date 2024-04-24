@@ -53,7 +53,7 @@ filestem = '/scratch/gpfs/cabrooks/bunk_models/'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
-preload_path = 'cabrooks/1k-proteins-wordpiece'
+preload_path = 'cabrooks/10k-proteins-wordpiece'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
 config.vocab_size = char_tokenizer.vocab_size
