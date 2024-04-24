@@ -48,7 +48,7 @@ filestem = '/scratch/gpfs/cabrooks/bunk_models/'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
-preload_path = 'cabrooks/1k-proteins-wordpiece'
+preload_path = 'cabrooks/10k-proteins-wordpiece'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 
 with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/623K_truncated_512_train.txt', 'r') as f:
@@ -87,7 +87,7 @@ end = time.time()
 print(end - start)
 print(len(train_inputs['input_ids']))
 print(train_inputs['input_ids'][0])
-torch.save(train_inputs, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp1k.pt')
+torch.save(train_inputs, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp10k.pt')
 
 
 
