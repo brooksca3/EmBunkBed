@@ -11,6 +11,12 @@ from torch.utils.checkpoint import checkpoint
 from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast, BatchEncoding
 from transformers2.models.bert import BertForMaskedLM
 
+k_val = 3
+with open('/home/cabrooks/EmBunkBed/creating_tokenizers/kmers_toks_{k_val}.txt', 'r') as f:
+   toks_for_vocab_size = [t.strip() for t in f.readlines()]
+   if toks_for_vocab_size[-1] == '':
+      toks_for_vocab_size.pop(-1)
+
 def chunk_list(data, num_chunks):
     chunk_size = len(data) // num_chunks
     remainder = len(data) % num_chunks
@@ -59,7 +65,7 @@ print(f"Using device {device}.")
 preload_path = 'cabrooks/10k-proteins-wordpiece'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
-config.vocab_size = char_tokenizer.vocab_size
+config.vocab_size = len(toks_for_vocab_size)
 config.char_tokenizer = char_tokenizer
 
 config.char_hidden_size = 60
