@@ -60,6 +60,7 @@ with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/623K_truncated
     ## we add 6 as the dummy non-suffix character
     text = ['6' + t for t in text]
     f.close()
+text = text[:100]
 
 num_train_examples = len(text)
 
@@ -85,9 +86,14 @@ for chunk in tokenized_chunks:
 train_inputs = concatenate_encodings(tokenized_chunks)
 end = time.time()
 print(end - start)
-print(len(train_inputs['input_ids']))
+print(train_inputs.keys())
+# print(len(train_inputs['input_ids']))
 print(train_inputs['input_ids'][0])
-torch.save(train_inputs, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp10k.pt')
+print(train_inputs['token_type_ids'][0])
+print(train_inputs['attention_mask'][0])
+print(train_inputs['labels'][0])
+print(type(train_inputs))
+# torch.save(train_inputs, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp10k.pt')
 
 
 

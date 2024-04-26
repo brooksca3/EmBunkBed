@@ -61,7 +61,7 @@ config.char_tokenizer = char_tokenizer
 
 config.char_hidden_size = 60
 config.hidden_size = 768
-config.max_position_embeddings = 1024
+config.max_position_embeddings = MAXLENGTH
 config.secondary_tokenizers = []
 model = BertForMaskedLM(config).to(device)
 
@@ -126,10 +126,21 @@ log_every = int(num_steps_per_epoch/num_logs_per_epoch)
 eval_every = int(num_steps_per_epoch/num_evals_per_epoch)
 save_every = int(num_steps_per_epoch/num_saves_per_epoch)
 
+# training_args = TrainingArguments(
+#     evaluation_strategy = "steps",
+#     eval_steps=eval_every,
+#     logging_steps=log_every,
+#     save_steps=save_every,
+#     output_dir=filestem + '/char_only_testing' + str(batch_size),
+#     per_device_train_batch_size=batch_size,
+#     num_train_epochs=epochs
+#     # learning_rate=5e-05
+# )
+
 training_args = TrainingArguments(
     evaluation_strategy = "steps",
-    eval_steps=eval_every,
-    logging_steps=log_every,
+    eval_steps=200,
+    logging_steps=200,
     save_steps=save_every,
     output_dir=filestem + '/char_only_testing' + str(batch_size),
     per_device_train_batch_size=batch_size,
