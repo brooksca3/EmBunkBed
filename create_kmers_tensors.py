@@ -6,9 +6,9 @@ from creating_tokenizers.wordpiece_generator import get_tokenizer
 sys.path.append('./desformers/src')
 from transformers2 import BertTokenizer, BatchEncoding
 
-
 MAXLENGTH = 512
 with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/623K_truncated_512_train.txt', 'r') as f:
+# with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/16K_truncated_512_validation.txt', 'r') as f:
     text = f.read().lower().split('\n')
     # text = [t.replace("=", '') for t in text]
     text = [t[:MAXLENGTH] for t in text]
@@ -59,8 +59,8 @@ def tokenize(tokenizer, k, string, max_length=512):
             final_toks += encode(tokenizer, chunk)
      num_to_pad = max_length - len(final_toks)
      final_toks.extend([tokenizer.pad_token_id] * num_to_pad)
-   #   print(final_toks)
-   #   print(tokenizer.convert_ids_to_tokens(final_toks))
+    #  print(final_toks)
+    #  print(tokenizer.convert_ids_to_tokens(final_toks))
      return torch.tensor(final_toks)
 
 
@@ -96,8 +96,7 @@ def prepare_batch_encoding(text, tokenizer, k, max_length=512):
     })
 
 
-print(len(text[0]))
-k = 3
+k = 2
 with open(f'creating_tokenizers/kmers_toks_{k}.txt', 'r') as f:
    toks = [t.strip() for t in f.readlines()]
    if toks[-1] == '':
@@ -114,15 +113,16 @@ tokenizer = get_tokenizer(toks)
 
 # Example usage:
 start = time.time()
-text_data = text[:10000]  # Assuming 'text' is your list of strings loaded from the file
-batch_encoding = prepare_batch_encoding(text_data, tokenizer, k=3)
+text_data = text[:]  # Assuming 'text' is your list of strings loaded from the file
+batch_encoding = prepare_batch_encoding(text_data, tokenizer, k=2)
 end = time.time()
 print(end - start)
 # torch.save(train_inputs, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp10k.pt')
-# torch.save(batch_encoding, 'testing_kmer.pt')
+torch.save(batch_encoding, '/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_2mer.pt')
 
 # # Accessing the BatchEncoding data
 # print(batch_encoding['input_ids'][0])
+# print(len(batch_encoding['input_ids'][0]))
 # print(batch_encoding['token_type_ids'][0])
 # print(batch_encoding['attention_mask'][0])
 # print(batch_encoding['labels'][0])

@@ -32,8 +32,10 @@ def concatenate_encodings(encodings_list):
     }, tensor_type='pt')
     return concatenated
 
+train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp1k.pt')
+
 epochs = 75
-MAXLENGTH = 520 ## bit of buffer on top of 512 for random stuff 
+MAXLENGTH = len(train_inputs['input_ids'][0]) ## bit of buffer on top of 512 for random stuff 
 
 ### ADJUST PARAMETERS AS DESIRED ###
 num_logs_per_epoch = 4
@@ -59,41 +61,13 @@ config = BertConfig()
 config.vocab_size = char_tokenizer.vocab_size
 config.char_tokenizer = char_tokenizer
 
-config.char_hidden_size = 60
+config.char_hidden_size = 768
 config.hidden_size = 768
-config.max_position_embeddings = 1024
+config.max_position_embeddings = MAXLENGTH
 config.secondary_tokenizers = []
 model = BertForMaskedLM(config).to(device)
 
 model.to(device)
-
-# with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/623K_truncated_512_train.txt', 'r') as f:
-#     text = f.read().lower().split('\n')
-#     # text = [t.replace("=", '') for t in text]
-#     text = [t[:MAXLENGTH] for t in text]
-#     if text[-1].strip() == '':
-#         text.pop(-1)
-#     ## we add 6 as the dummy non-suffix character
-#     text = ['6' + t for t in text]
-#     f.close()
-
-# num_train_examples = len(text)
-# text_chunks = chunk_list(text, 100)
-
-# # Tokenize each chunk
-# tokenized_chunks = [char_tokenizer(chunk, return_tensors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length') for chunk in text_chunks]
-
-# # Set the labels for each chunk and then concatenate them
-# for chunk in tokenized_chunks:
-#     chunk['labels'] = chunk.input_ids.detach().clone()
-    
-# train_inputs = concatenate_encodings(tokenized_chunks)
-
-# train_inputs = char_tokenizer(text, return_tensors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length')
-# train_inputs['labels'] = train_inputs.input_ids.detach().clone()
-print('here1')
-train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp1k.pt')
-print('here2')
 
 with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/16K_truncated_512_validation.txt', 'r') as f:
     text_val = f.read().lower().split('\n')
@@ -131,7 +105,7 @@ training_args = TrainingArguments(
     eval_steps=eval_every,
     logging_steps=log_every,
     save_steps=save_every,
-    output_dir=filestem + '/wp1k_testing' + str(batch_size),
+    output_dir=filestem + '/wp1k_testing_768' + str(batch_size),
     per_device_train_batch_size=batch_size,
     num_train_epochs=epochs
     # learning_rate=5e-05
@@ -149,5 +123,5 @@ trainer.train()
 model.config.char_tokenizer = None
 model.config.secondary_tokenizers = None
 
-model.save_pretrained(filestem + '/wp1k_testing' + str(batch_size) + '/tester')
+model.save_pretrained(filestem + '/wp1k_testing_768' + str(batch_size) + '/tester')
 

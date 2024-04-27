@@ -10,7 +10,13 @@ sys.path.append('./desformers/src')
 from torch.utils.checkpoint import checkpoint
 from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast, BatchEncoding
 from transformers2.models.bert import BertForMaskedLM
-print('wp10k')
+print('2mer')
+k_val = 2
+with open(f'/home/cabrooks/EmBunkBed/creating_tokenizers/kmers_toks_{k_val}.txt', 'r') as f:
+   toks_for_vocab_size = [t.strip() for t in f.readlines()]
+   if toks_for_vocab_size[-1] == '':
+      toks_for_vocab_size.pop(-1)
+
 def chunk_list(data, num_chunks):
     chunk_size = len(data) // num_chunks
     remainder = len(data) % num_chunks
@@ -32,10 +38,11 @@ def concatenate_encodings(encodings_list):
     }, tensor_type='pt')
     return concatenated
 
-train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_wp10k.pt')
+train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_2mer.pt')
+val_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/val_inputs_2mer.pt')
 
 epochs = 75
-MAXLENGTH = len(train_inputs['input_ids'][0]) ## bit of buffer on top of 512 for random stuff 
+MAXLENGTH = len(train_inputs['input_ids'][0])
 
 ### ADJUST PARAMETERS AS DESIRED ###
 num_logs_per_epoch = 4
@@ -58,7 +65,7 @@ print(f"Using device {device}.")
 preload_path = 'cabrooks/10k-proteins-wordpiece'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
-config.vocab_size = char_tokenizer.vocab_size
+config.vocab_size = len(toks_for_vocab_size)
 config.char_tokenizer = char_tokenizer
 
 config.char_hidden_size = 768
@@ -68,18 +75,6 @@ config.secondary_tokenizers = []
 model = BertForMaskedLM(config).to(device)
 
 model.to(device)
-
-with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/16K_truncated_512_validation.txt', 'r') as f:
-    text_val = f.read().lower().split('\n')
-    text_val = [t[:MAXLENGTH] for t in text_val]
-    # text_val = [t.replace("=", '') for t in text_val]
-    if text_val[-1].strip() == '':
-        text_val.pop(-1)
-    text_val = ['6' + t for t in text_val]
-    f.close()
-
-val_inputs = char_tokenizer(text_val, return_tensors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length')
-val_inputs['labels'] = val_inputs.input_ids.detach().clone()
 
 class BaseDataset(torch.utils.data.Dataset):
     def __init__(self, encodings):
@@ -100,12 +95,23 @@ log_every = int(num_steps_per_epoch/num_logs_per_epoch)
 eval_every = int(num_steps_per_epoch/num_evals_per_epoch)
 save_every = int(num_steps_per_epoch/num_saves_per_epoch)
 
+# training_args = TrainingArguments(
+#     evaluation_strategy = "steps",
+#     eval_steps=eval_every,
+#     logging_steps=log_every,
+#     save_steps=save_every,
+#     output_dir=filestem + '/char_only_testing' + str(batch_size),
+#     per_device_train_batch_size=batch_size,
+#     num_train_epochs=epochs
+#     # learning_rate=5e-05
+# )
+
 training_args = TrainingArguments(
     evaluation_strategy = "steps",
-    eval_steps=eval_every,
-    logging_steps=log_every,
+    eval_steps=200,
+    logging_steps=200,
     save_steps=save_every,
-    output_dir=filestem + '/wp10k_testing_768_' + str(batch_size),
+    output_dir=filestem + '/2mer_testing' + str(batch_size),
     per_device_train_batch_size=batch_size,
     num_train_epochs=epochs
     # learning_rate=5e-05
@@ -123,5 +129,5 @@ trainer.train()
 model.config.char_tokenizer = None
 model.config.secondary_tokenizers = None
 
-model.save_pretrained(filestem + '/wp10k_testing_768_' + str(batch_size) + '/tester')
+model.save_pretrained(filestem + '/2mer_testing' + str(batch_size) + '/tester')
 
