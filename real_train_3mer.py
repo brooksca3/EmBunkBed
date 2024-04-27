@@ -10,9 +10,9 @@ sys.path.append('./desformers/src')
 from torch.utils.checkpoint import checkpoint
 from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast, BatchEncoding
 from transformers2.models.bert import BertForMaskedLM
-
+print('3mer')
 k_val = 3
-with open('/home/cabrooks/EmBunkBed/creating_tokenizers/kmers_toks_{k_val}.txt', 'r') as f:
+with open(f'/home/cabrooks/EmBunkBed/creating_tokenizers/kmers_toks_{k_val}.txt', 'r') as f:
    toks_for_vocab_size = [t.strip() for t in f.readlines()]
    if toks_for_vocab_size[-1] == '':
       toks_for_vocab_size.pop(-1)
@@ -38,8 +38,8 @@ def concatenate_encodings(encodings_list):
     }, tensor_type='pt')
     return concatenated
 
-train_inputs = torch.load('/home/cabrooks/EmBunkBed/testing_kmer.pt')
-val_inputs = torch.load('/home/cabrooks/EmBunkBed/testing_kmer.pt')
+train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_3mer.pt')
+val_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/val_inputs_3mer.pt')
 
 epochs = 75
 MAXLENGTH = len(train_inputs['input_ids'][0])
@@ -65,10 +65,10 @@ print(f"Using device {device}.")
 preload_path = 'cabrooks/10k-proteins-wordpiece'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
-config.vocab_size = len(toks_for_vocab_size)
+config.vocab_size = char_tokenizer.vocab_size
 config.char_tokenizer = char_tokenizer
 
-config.char_hidden_size = 60
+config.char_hidden_size = 768
 config.hidden_size = 768
 config.max_position_embeddings = MAXLENGTH
 config.secondary_tokenizers = []
@@ -111,7 +111,7 @@ training_args = TrainingArguments(
     eval_steps=200,
     logging_steps=200,
     save_steps=save_every,
-    output_dir=filestem + '/char_only_testing' + str(batch_size),
+    output_dir=filestem + '/3mer_testing' + str(batch_size),
     per_device_train_batch_size=batch_size,
     num_train_epochs=epochs
     # learning_rate=5e-05
@@ -129,5 +129,5 @@ trainer.train()
 model.config.char_tokenizer = None
 model.config.secondary_tokenizers = None
 
-model.save_pretrained(filestem + '/char_only_testing' + str(batch_size) + '/tester')
+model.save_pretrained(filestem + '/3mer_testing' + str(batch_size) + '/tester')
 
