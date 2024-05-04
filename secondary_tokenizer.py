@@ -72,16 +72,18 @@ class ProteinTokenizer(SecondaryTokenizer):
 
   def encode(self, token): # might need to change
     encodings = self.tokenizer.encode(token)
-    if encodings[0] == self.tokenizer.cls_token_id:
+    if encodings[0] == self.tokenizer.cls_token_id and len(encodings) > 1:
        encodings = encodings[1:]
-    if encodings[-1] == self.tokenizer.sep_token_id:
+    if encodings[-1] == self.tokenizer.sep_token_id and len(encodings) > 1:
        encodings = encodings[:-1]
+    if len(encodings) == 1:
+       encodings = [self.tokenizer.cls_token_id] + encodings
     return encodings
 
   def tokenize(self, string): # not old man
     #  final_toks = ['[CLS]', '6']
    #   print(string)
-     final_toks = [self.tokenizer.cls_token_id, self.encode('6')[0]]
+     final_toks = [self.encode('6')[1]]
      input = string[:]
      if input[0] != '6':
         print('Error: first char must be 6')
@@ -92,6 +94,7 @@ class ProteinTokenizer(SecondaryTokenizer):
      input = input.replace("[MASK]", " 6")
      input_list = input.split()
      for ind,chunk in enumerate(input_list):
+
         cur_toks = self.encode(chunk)
         if ind != 0 or cur_toks[0] == self.tokenizer.mask_token_id:
           # final_toks += ['[MASK]']
@@ -104,8 +107,8 @@ class ProteinTokenizer(SecondaryTokenizer):
               cur_len = len(temp_tok_str) - 2
            else:
               cur_len = len(temp_tok_str)
-           final_toks += [tok] * cur_len
-     final_toks.append(self.tokenizer.sep_token_id)
+           if tok != self.encode('6')[1]:
+              final_toks += [tok] * cur_len
    #   print(final_toks)
      return torch.tensor(final_toks)
 
@@ -124,12 +127,21 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
     self.special_toks = [tokenizer.pad_token_id, tokenizer.unk_token_id, tokenizer.mask_token_id, tokenizer.cls_token_id, tokenizer.sep_token_id]
     super().__init__(hidden_size=hidden_size, vocab_size=self.tokenizer.vocab_size)
 
-  def encode(self, token):
+  # def encode(self, token):
+  #   encodings = self.tokenizer.encode(token)
+  #   if encodings[0] == self.tokenizer.cls_token_id:
+  #      encodings = encodings[1:]
+  #   if encodings[-1] == self.tokenizer.sep_token_id:
+  #      encodings = encodings[:-1]
+  #   return encodings
+  def encode(self, token): # might need to change
     encodings = self.tokenizer.encode(token)
-    if encodings[0] == self.tokenizer.cls_token_id:
+    if encodings[0] == self.tokenizer.cls_token_id and len(encodings) > 1:
        encodings = encodings[1:]
-    if encodings[-1] == self.tokenizer.sep_token_id:
+    if encodings[-1] == self.tokenizer.sep_token_id and len(encodings) > 1:
        encodings = encodings[:-1]
+    if len(encodings) == 1 and '[' in token:
+       encodings = [None] + encodings
     return encodings
 
   def tokenize(self, string):
@@ -147,12 +159,19 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      input = input.replace('[unk]', '[UNK]')
      input = input.replace("[MASK]", '7')
      input = input.replace("[UNK]", '7')
+     input = input.replace("[CLS]", '7')
+     input = input.replace("[SEP]", '7')
+     input = input.replace("[PAD]", '8')
+    #  print(len(input))
+    #  print('*')
 
      # split into k-sized windows
      input_list = [input[i:i+self.k] for i in range(0, len(input), self.k)]
      filler = '6' * self.k
      for ind,chunk in enumerate(input_list):
-         if ind > 0:
+         if '8' in chunk:
+            final_toks += [self.tokenizer.pad_token_id] * self.k
+         elif ind > 0:
             temp_chunk = filler + chunk
             cur_toks = self.encode(temp_chunk)
             if len(cur_toks) == 1:
@@ -163,6 +182,6 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
          else:
             final_toks += self.encode(chunk) * self.k
      #final_toks.append(self.tokenizer.sep_token_id)
-     print(final_toks)
-     print(self.tokenizer.convert_ids_to_tokens(final_toks))
+    #  print(final_toks)
+    #  print(self.tokenizer.convert_ids_to_tokens(final_toks))
      return torch.tensor(final_toks)

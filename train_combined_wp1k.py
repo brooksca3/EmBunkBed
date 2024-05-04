@@ -11,6 +11,8 @@ from torch.utils.checkpoint import checkpoint
 from transformers2 import BertConfig, BertTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, PreTrainedTokenizerFast, BatchEncoding
 from transformers2.models.bert import BertForMaskedLM
 
+print('1k combined')
+
 def chunk_list(data, num_chunks):
     chunk_size = len(data) // num_chunks
     remainder = len(data) % num_chunks
@@ -33,7 +35,7 @@ def concatenate_encodings(encodings_list):
     return concatenated
 
 epochs = 75
-MAXLENGTH = 520 ## bit of buffer on top of 512 for random stuff 
+MAXLENGTH = 1024 ## bit of buffer on top of 512 for random stuff 
 
 ### ADJUST PARAMETERS AS DESIRED ###
 num_logs_per_epoch = 4
@@ -53,24 +55,46 @@ filestem = '/scratch/gpfs/cabrooks/bunk_models/'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device {device}.")
 
+wp_1k_tokenizer = PreTrainedTokenizerFast.from_pretrained('cabrooks/1k-proteins-wordpiece')
+protein_tokenizer = ProteinTokenizer(tokenizer=wp_1k_tokenizer)
+# print(wp_1k_tokenizer.convert_ids_to_tokens(protein_tokenizer.tokenize('6[MASK][MASK]evvvhngltyhlqilqlnllqqqq')))
+# sys.exit()
+
 preload_path = 'cabrooks/character-only-proteins'
 char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
 config.vocab_size = char_tokenizer.vocab_size
 config.char_tokenizer = char_tokenizer
-
 config.char_hidden_size = 60
 config.hidden_size = 768
 config.max_position_embeddings = MAXLENGTH
-config.secondary_tokenizers = []
+config.secondary_tokenizers = [protein_tokenizer]
+
+#########
 model = BertForMaskedLM(config).to(device)
+# Assuming you want to use the pre-trained weights from this model, use given preload_path
+random_state = model.state_dict()
+# wp1k model
+state_model = torch.load("/scratch/gpfs/cabrooks/bunk_models/wp1k_testing_76832/checkpoint-194540/my_custom_model.pth")
+char_state_dict = torch.load('/scratch/gpfs/cabrooks/bunk_models/char_only_testing32/final-213994/my_custom_model.pth')
+char_state_dict['bert.embeddings.combined_embeddings.secondary_embeddings.0.weight'] = state_model['bert.embeddings.combined_embeddings.char_embeddings.weight']
+char_state_dict['bert.embeddings.word_embeddings.secondary_embeddings.0.weight'] = state_model['bert.embeddings.combined_embeddings.char_embeddings.weight']
+#
+char_state_dict['bert.embeddings.combined_embeddings.combination_layer.weight'] = random_state['bert.embeddings.combined_embeddings.combination_layer.weight']
+char_state_dict['bert.embeddings.word_embeddings.combination_layer.weight'] = random_state['bert.embeddings.word_embeddings.combination_layer.weight']
+# print(len(model['bert.embeddings.position_embeddings.weight']))
+model.load_state_dict(char_state_dict)
 
 model.to(device)
+#########
+
 
 print('here1')
 train_inputs = torch.load('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/train_inputs_char.pt')
 print('here2')
 
+# print(char_tokenizer.convert_ids_to_tokens(train_inputs['input_ids'][0]))
+# sys.exit()
 with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/16K_truncated_512_validation.txt', 'r') as f:
     text_val = f.read().lower().split('\n')
     text_val = [t[:MAXLENGTH] for t in text_val]
@@ -118,7 +142,7 @@ training_args = TrainingArguments(
     eval_steps=200,
     logging_steps=200,
     save_steps=save_every,
-    output_dir=filestem + '/char_only_testing' + str(batch_size),
+    output_dir=filestem + '/char_1k_combined_test' + str(batch_size),
     per_device_train_batch_size=batch_size,
     num_train_epochs=epochs
     # learning_rate=5e-05
@@ -136,5 +160,5 @@ trainer.train()
 model.config.char_tokenizer = None
 model.config.secondary_tokenizers = None
 
-model.save_pretrained(filestem + '/char_only_testing' + str(batch_size) + '/tester')
+model.save_pretrained(filestem + '/char_1k_combined_test' + str(batch_size) + '/tester')
 
