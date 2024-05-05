@@ -162,7 +162,7 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
      input = input.replace("[CLS]", '7')
      input = input.replace("[SEP]", '7')
      input = input.replace("[PAD]", '8')
-    #  print(len(input))
+     orig_length = len(input)
     #  print('*')
 
      # split into k-sized windows
@@ -181,6 +181,10 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
             final_toks += [cur_toks] * self.k
          else:
             final_toks += self.encode(chunk) * self.k
+     if len(final_toks) != orig_length:
+        print('potential error in tokenize secondary toks')
+        print(len(final_toks), orig_length)
+        final_toks = final_toks[:orig_length]
      #final_toks.append(self.tokenizer.sep_token_id)
     #  print(final_toks)
     #  print(self.tokenizer.convert_ids_to_tokens(final_toks))

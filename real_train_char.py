@@ -58,7 +58,6 @@ char_tokenizer = PreTrainedTokenizerFast.from_pretrained(preload_path)
 config = BertConfig()
 config.vocab_size = char_tokenizer.vocab_size
 config.char_tokenizer = char_tokenizer
-
 config.char_hidden_size = 60
 config.hidden_size = 768
 config.max_position_embeddings = MAXLENGTH

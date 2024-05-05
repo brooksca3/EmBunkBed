@@ -126,6 +126,7 @@ for i in range(len(train_inputs['input_ids'])):
         train_inputs['attention_mask'][i] = torch.cat([torch.ones(1, dtype=torch.long), attention_mask[:-1]])
         train_inputs['labels'][i] = train_inputs['input_ids'][i]
 
+
 M = len(train_inputs['input_ids'])  # Total number of training examples
 pad_token_id = char_tokenizer.pad_token_id  # Padding token ID for input_ids
 new_dim = 522  # New dimension size for each sequence
@@ -162,8 +163,64 @@ with open('/scratch/gpfs/cabrooks/deleteme_data/prepped_bunk_data/16K_truncated_
     text_val = ['6' + t for t in text_val]
     f.close()
 
-val_inputs = char_tokenizer(text_val, return_tensors='pt', max_length=MAXLENGTH, truncation=True, padding='max_length')
+val_inputs = char_tokenizer(text_val, return_tensors='pt', max_length=520, truncation=True, padding='max_length')
 val_inputs['labels'] = val_inputs.input_ids.detach().clone()
+
+
+#######
+
+for i in range(len(val_inputs['input_ids'])):
+    input_ids = val_inputs['input_ids'][i]
+    token_type_ids = val_inputs['token_type_ids'][i]
+    attention_mask = val_inputs['attention_mask'][i]
+    
+    # Count non-padding tokens (assuming pad token id is 0, adjust if different)
+    non_pad_count = torch.sum(input_ids != char_tokenizer.pad_token_id).item()
+    
+    # Calculate remainder when non-pad count is divided by 3
+    remainder = non_pad_count % 3
+    
+    # Check how many tokens need to be added to make it divisible by 3
+    if remainder == 1:
+        # Need to add two special tokens to make the count divisible by 3
+        special_tokens = torch.tensor(char_tokenizer.encode('6')).repeat(2)
+        val_inputs['input_ids'][i] = torch.cat([special_tokens[:2], input_ids[:-2]])  # Add two tokens
+        val_inputs['token_type_ids'][i] = torch.cat([torch.zeros(2, dtype=torch.long), token_type_ids[:-2]])
+        val_inputs['attention_mask'][i] = torch.cat([torch.ones(2, dtype=torch.long), attention_mask[:-2]])
+        val_inputs['labels'][i] = val_inputs['input_ids'][i]
+    elif remainder == 2:
+        # Need to add one special token to make the count divisible by 3
+        special_token = torch.tensor(char_tokenizer.encode('6'))
+        val_inputs['input_ids'][i] = torch.cat([special_token[:1], input_ids[:-1]])  # Add one token
+        val_inputs['token_type_ids'][i] = torch.cat([torch.zeros(1, dtype=torch.long), token_type_ids[:-1]])
+        val_inputs['attention_mask'][i] = torch.cat([torch.ones(1, dtype=torch.long), attention_mask[:-1]])
+        val_inputs['labels'][i] = val_inputs['input_ids'][i]
+
+
+M = len(val_inputs['input_ids'])  # Total number of training examples
+pad_token_id = char_tokenizer.pad_token_id  # Padding token ID for input_ids
+new_dim = 522  # New dimension size for each sequence
+
+# Initialize new tensors with padding values where necessary
+val_inputs_copy = {
+    'input_ids': torch.full((M, new_dim), pad_token_id, dtype=torch.long),
+    'token_type_ids': torch.zeros((M, new_dim), dtype=torch.long),
+    'attention_mask': torch.zeros((M, new_dim), dtype=torch.long),
+    'labels': torch.full((M, new_dim), pad_token_id, dtype=torch.long)
+}
+
+# Copy existing data into new tensors
+for i in range(M):
+    seq_len = val_inputs['input_ids'][i].size(0)
+    val_inputs_copy['input_ids'][i, :seq_len] = val_inputs['input_ids'][i]
+    val_inputs_copy['token_type_ids'][i, :seq_len] = val_inputs['token_type_ids'][i]
+    val_inputs_copy['attention_mask'][i, :seq_len] = val_inputs['attention_mask'][i]
+    val_inputs_copy['labels'][i, :seq_len] = val_inputs['input_ids'][i]  # Assuming labels are same as input_ids before padding
+
+# Wrap as BatchEncoding
+val_inputs_copy = BatchEncoding(val_inputs_copy, tensor_type='pt')
+val_inputs = val_inputs_copy
+#######
 
 class BaseDataset(torch.utils.data.Dataset):
     def __init__(self, encodings):
