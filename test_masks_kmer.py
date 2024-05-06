@@ -1,22 +1,25 @@
 import torch
 import random
 import time
-from load_model import load_char, load_char_val_text, load_char_1k, load_char_10k  # Ensure this module is present in your environment
+import sys
+from load_model import load_char, load_kmer_val_text, load_2mer, load_3mer, load_char_val_text  # Ensure this module is present in your environment
 import torch.nn.functional as F
 # Load the model and tokenizer
-model_1k, tokenizer = load_char_1k()
-model_10k, _ = load_char_10k()
+model_2mer, tokenizer = load_2mer()
+model_3mer, _ = load_3mer()
 model_char, _ = load_char()
 
-model_1k.eval()
-model_10k.eval()
+model_2mer.eval()
+model_3mer.eval()
 model_char.eval()
 
-text = load_char_val_text()
+# text = load_char_val_text()
+text = load_kmer_val_text()
 
 def predict_masked_token_single(model, text, mask_position, n=10):
     # Tokenization and masking process
-    encoded_input = tokenizer([text], padding=True, return_tensors="pt", max_length=520, truncation=True)
+    encoded_input = tokenizer([text], padding=True, return_tensors="pt", max_length=526, truncation=True)
+
     input_ids = encoded_input['input_ids'].to(model.device)
     attention_mask = encoded_input['attention_mask'].to(model.device)
     original_token_id = input_ids[0, mask_position].item()
@@ -40,15 +43,15 @@ def predict_masked_token_single(model, text, mask_position, n=10):
 
 def run_experiment_with_detailed_progress(trials, top_k=5, log_interval=50):
     models = {
-        'Model 1K': model_1k,
-        'Model 10K': model_10k,
+        'Model 2mer': model_2mer,
+        'Model 3mer': model_3mer,
         'Model Char': model_char
     }
     results = {name: [0] * top_k for name in models}
     trial_data = []
     for _ in range(trials):
         ex = random.choice(text)
-        mask_position = random.randint(0, len(ex) - 1)
+        mask_position = random.randint(0, len(ex.split()[0]) - 1)
         trial_data.append((ex, mask_position))
 
     for i in range(trials):
