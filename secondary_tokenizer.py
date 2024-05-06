@@ -182,11 +182,11 @@ class ProteinKmerTokenizer(SecondaryTokenizer):
          else:
             final_toks += self.encode(chunk) * self.k
      if len(final_toks) != orig_length:
-        print('potential error in tokenize secondary toks')
-        print(len(final_toks), orig_length)
-        print(final_toks)
-        print(input)
-        return None
+    #     print('potential error in tokenize secondary toks')
+    #     print(len(final_toks), orig_length)
+    #     print(final_toks)
+    #     print(input)
+    #     return None
         final_toks = final_toks[:orig_length]
      #final_toks.append(self.tokenizer.sep_token_id)
     #  print(final_toks)

@@ -8,19 +8,19 @@ import csv
 from sklearn.metrics import roc_auc_score as roc
 import torch.nn.functional as F
 
-from load_model import load_char, load_char_val_text, load_char_1k, load_char_10k  # Ensure this module is present in your environment
+from load_model import load_char, load_2mer, load_3mer  # Ensure this module is present in your environment
 # Load the model and tokenizer
-model_1k, tokenizer2 = load_char_1k()
-model_10k, _ = load_char_10k()
+model_2mer, tokenizer2 = load_2mer()
+model_3mer, _ = load_3mer()
 model_char, _ = load_char()
 
-print('insertion only, 2500, 1k, 10k, char')
+print('insertion, 2500, 2mer, 3mer, char')
 
-model_1k.eval()
-model_10k.eval()
+model_2mer.eval()
+model_3mer.eval()
 model_char.eval()
 
-model_list = [model_1k, model_10k, model_char]
+model_list = [model_2mer, model_3mer, model_char]
 
 for model2 in model_list:
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

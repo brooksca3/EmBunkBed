@@ -49,6 +49,46 @@ def load_char_1k():
 
     return model, char_tokenizer
 
+
+def load_raw_1k():
+
+    wp_1k_tokenizer = PreTrainedTokenizerFast.from_pretrained('cabrooks/1k-proteins-wordpiece')
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Using device {device}.")
+    config = BertConfig()
+    config.vocab_size = wp_1k_tokenizer.vocab_size
+    config.char_tokenizer = wp_1k_tokenizer
+    config.char_hidden_size = 768
+    config.hidden_size = 768
+    config.max_position_embeddings = 520
+    config.secondary_tokenizers = []
+    model = BertForMaskedLM(config).to(device)
+    model.to(device)
+    model.load_state_dict(torch.load('/scratch/gpfs/cabrooks/bunk_models/wp1k_testing_76832/final-194540/my_custom_model.pth', map_location=torch.device('cpu')))
+
+    return model, wp_1k_tokenizer
+
+
+def load_raw_10k():
+
+    wp_1k_tokenizer = PreTrainedTokenizerFast.from_pretrained('cabrooks/10k-proteins-wordpiece')
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    print(f"Using device {device}.")
+    config = BertConfig()
+    config.vocab_size = wp_1k_tokenizer.vocab_size
+    config.char_tokenizer = wp_1k_tokenizer
+    config.char_hidden_size = 768
+    config.hidden_size = 768
+    config.max_position_embeddings = 520
+    config.secondary_tokenizers = []
+    model = BertForMaskedLM(config).to(device)
+    model.to(device)
+    model.load_state_dict(torch.load('/scratch/gpfs/cabrooks/bunk_models/wp10k_testing_768_32/final-175086/my_custom_model.pth', map_location=torch.device('cpu')))
+
+    return model, wp_1k_tokenizer
+
 def load_char_10k():
 
     wp_10k_tokenizer = PreTrainedTokenizerFast.from_pretrained('cabrooks/10k-proteins-wordpiece')

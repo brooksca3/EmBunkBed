@@ -8,21 +8,23 @@ import csv
 from sklearn.metrics import roc_auc_score as roc
 import torch.nn.functional as F
 
-from load_model import load_char, load_char_val_text, load_char_1k, load_char_10k  # Ensure this module is present in your environment
+from load_model import load_char, load_raw_10k, load_raw_1k  # Ensure this module is present in your environment
 # Load the model and tokenizer
-model_1k, tokenizer2 = load_char_1k()
-model_10k, _ = load_char_10k()
-model_char, _ = load_char()
+model_raw_1k, tokenizer1k = load_raw_1k()
+model_raw_10k, tokenizer10k = load_raw_10k()
+model_char, tokenizer_char = load_char()
 
-print('insertion only, 2500, 1k, 10k, char')
+print('general, 2500, 1k raw, 10k raw, char')
 
-model_1k.eval()
-model_10k.eval()
+model_raw_1k.eval()
+model_raw_10k.eval()
 model_char.eval()
 
-model_list = [model_1k, model_10k, model_char]
+model_list = [model_raw_1k, model_raw_10k, model_char]
+tok_list = [tokenizer1k, tokenizer10k, tokenizer_char]
 
-for model2 in model_list:
+for tokind, model2 in enumerate(model_list):
+  tokenizer2 = tok_list[tokind]
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
   filename = '/scratch/gpfs/cabrooks/deleteme_data/ClinVar_indel_benchmark_with_predictions.csv'
@@ -55,7 +57,7 @@ for model2 in model_list:
   def compute_token_probabilities2(sentence):
       sentence = '6' + sentence.lower()
       # Tokenize the input sentence and add special tokens
-      tokenized_sentence = tokenizer2.encode(sentence, add_special_tokens=True)
+      tokenized_sentence = tokenizer2.encode(sentence, add_special_tokens=True)[:520]
       #print(tokenized_sentence)
       original_token_ids = []
       probabilities = []
@@ -82,8 +84,8 @@ for model2 in model_list:
   singledel = []
   for i in range(num_data):
     # if data['mut_type'][i] == 'deletion' and data['ref_alt_length_diff'][i] == '1':
-    # if data['mut_type'][i] == 'deletion':
-    if data['mut_type'][i] == 'insertion':
+    if data['mut_type'][i] == 'deletion':
+    # if data['mut_type'][i] == 'insertion':
       singledel.append(i)
   print(len(singledel))
   #singledel = singledel
